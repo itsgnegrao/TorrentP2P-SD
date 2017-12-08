@@ -57,3 +57,5 @@ typings/
 # dotenv environment variables file
 .env
 
+/TorrentP2P/nbproject/private/
+/nbproject/private/
