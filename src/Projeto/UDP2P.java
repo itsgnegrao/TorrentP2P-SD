@@ -15,8 +15,7 @@ public class UDP2P {
   private static String apelido;
     
    public static void main(String[] args) throws IOException {
-    startServer();
-    //startCliente(args[0]); //args[0] ip de destino
+    //startServer();
     startCliente("127.0.0.1");
   }//main
   
@@ -38,7 +37,6 @@ public class UDP2P {
                     byte[] m = data.getBytes(); // transforma a mensagem em bytes 
 
                     /* armazena o IP do destino */
-                    //InetAddress aHost = InetAddress.getByName(args[1]); 
                     int serverPort = 6666; // porta do servidor
 
                     /* cria um pacote datagrama */
@@ -58,14 +56,25 @@ public class UDP2P {
                     /* aguarda datagramas */
                     aSocket.receive(reply);
                     data = new String(reply.getData());
+                    
                     if(data.contains("FILES")){
                         System.out.println(data);
                         sendQtdeNameFiles(data,aSocket,request,"Shared/");
+                    }               
+                    
+                    while(Menu() != 3){
+               
                     }
-                    System.out.println("Resposta: " + new String(reply.getData()));
-
+                    /* cria um pacote datagrama */
+                    data = "!!!SAIR!!!"+apelido;
+                    request = new DatagramPacket(data.getBytes(),  data.length(), aHost, serverPort);
+                    /* envia o pacote */
+                    aSocket.send(request);
+                    
                     /* libera o socket */
-                    aSocket.close();	
+                    aSocket.close();
+
+                    System.out.println("SAI");
                     
             } catch (SocketException ex) {
                 Logger.getLogger(UDP2P.class.getName()).log(Level.SEVERE, null, ex);
@@ -74,8 +83,7 @@ public class UDP2P {
             }
 
             
-            
-            while(true){
+           /* while(true){
                 try {
                     System.out.println(apelido+": ");
                     data = apelido +": "+reader.readLine();
@@ -84,44 +92,54 @@ public class UDP2P {
                    // byte[] m = args[0].getBytes(); // transforma a mensagem em bytes
                     byte[] m = data.getBytes(); // transforma a mensagem em bytes 
 
-                    /* armazena o IP do destino */
+                    // armazena o IP do destino 
                     //InetAddress aHost = InetAddress.getByName(args[1]); 
                     int serverPort = 6666; // porta do servidor
 
-                    /* cria um pacote datagrama */
+                    // cria um pacote datagrama 
                     DatagramPacket request =
                     new DatagramPacket(m,  data.length(), aHost, serverPort);
                     //new DatagramPacket(m,  args[0].length(), aHost, serverPort);
 
-                    /* envia o pacote */
+                    // envia o pacote 
                     aSocket.send(request);			                        
 
-                    /* cria um buffer vazio para receber datagramas */
+                    // cria um buffer vazio para receber datagramas 
                     byte[] buffer = new byte[1000];
                     DatagramPacket reply = new DatagramPacket(buffer, buffer.length);	
 
-                    /* aguarda datagramas */
+                    // aguarda datagramas 
                     aSocket.receive(reply);
                     //System.out.println("Resposta: " + new String(reply.getData()));
 
-                    /* libera o socket */
+                    // libera o socket 
                     aSocket.close();	
                 } catch (SocketException e){
                     System.out.println("Socket: " + e.getMessage());
                 }catch (IOException e){
                     System.out.println("IO: " + e.getMessage());
                 } //catch       
-            }
+            }*/
         }
     }).start();//Thread
     }//metodo
+   
+    public static int Menu() throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println("---MENU---:");
+        System.out.println("1: Procurar Arquivo.");
+        System.out.println("OFF 2: Criar Novo Arquivo Compartilhado.");
+        System.out.println("3: Sair.");
+        int op = Integer.valueOf(reader.readLine());
+        return op;
+        
+    }
 
-
-  public static void startServer() {
+  /*public static void startServer() {
     (new Thread() {
         @Override
         public void run() {
-            int port = 6667;
+            int port = 6666;
             DatagramSocket aSocket = null;
             try{
                 System.out.println(port);
@@ -130,11 +148,11 @@ public class UDP2P {
                 while(true){
                     byte[] buffer = new byte[1000]; // cria um buffer para receber requisicoes
 
-                    /* cria um pacote vazio */
+                    // cria um pacote vazio 
                     DatagramPacket request = new DatagramPacket(buffer, buffer.length);
                     aSocket.receive(request);  // aguarda a chegada de datagramas
-                    /* imprime e envia o datagrama de volta ao cliente */
-                    String data = new String(request.getData());
+                    // imprime e envia o datagrama de volta ao cliente 
+                    String data = new String(request.getData(),request.getOffset(),request.getLength());
                     System.out.println(data);
                     if(data.equals("FILES")){
                         sendQtdeNameFiles(data, aSocket, request,"Shared/");
@@ -150,7 +168,7 @@ public class UDP2P {
             } //catch  
         }
     }).start();//Thread
-    }//metodo	     
+    }//metodo	     */
   
    public static void sendQtdeNameFiles(String data, DatagramSocket aSocket, DatagramPacket request, String pastaPredef) throws IOException{
        File f = null;

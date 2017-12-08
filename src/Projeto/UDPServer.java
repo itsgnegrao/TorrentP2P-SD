@@ -35,6 +35,10 @@ public class UDPServer{
                     novoUser(apelido,request,tempuser);
                     getFiles(apelido, aSocket, request.getAddress(), request.getPort());
                 }
+                else if (data.contains("!!!SAIR!!!")){
+                    String apelido = data.replace("!!!SAIR!!!", "");
+                    removeUser(apelido, tempuser);
+                }
 
             } //while
         }catch (SocketException e){
@@ -81,7 +85,7 @@ public class UDPServer{
             bufferedWriter.newLine();
         }
         bufferedWriter.close();
-    }
+    }//método
 
     private static void novoUser(String apelido, DatagramPacket request, File tempuser) throws IOException {
         FileWriter writer = new FileWriter(tempuser, true);
@@ -93,5 +97,29 @@ public class UDPServer{
         bufferedWriter.write(user);
         bufferedWriter.newLine();
         bufferedWriter.close();
+    }//mẃetodo
+    
+    private static void removeUser(String apelido, File tempuser) throws IOException {
+        File deleteFile = new File("LogServer/FilesUsers/"+apelido+".txt");
+        File tempFile = new File("tempUSERtemp.txt");
+
+        BufferedReader reader = new BufferedReader(new FileReader(tempuser));
+        BufferedWriter writer = new BufferedWriter(new FileWriter(tempFile));
+
+        String currentLine;
+
+        while((currentLine = reader.readLine()) != null) {
+            // trim newline when comparing with lineToRemove
+            String trimmedLine = currentLine.trim();
+            if(trimmedLine.contains(apelido)) continue;
+            writer.write(currentLine + System.getProperty("line.separator"));
+        }
+        writer.close(); 
+        reader.close(); 
+        boolean successful = tempFile.renameTo(tempuser);
+        deleteFile.delete();
+       
     }
+    
+    
 }//class
