@@ -169,6 +169,12 @@ public class UDP2P {
     }
   
     private static void downFile() throws IOException {
+        /**
+         * Aqui implementar tambem a parte que ira buscar em cada Peer
+         * maanter uma lista de Peers e seus Respectivos Pacotes Seria Bom
+         * Implementar Posteriormente.
+         */
+        
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("Digite o nome do Arquivo: ");
         String fileDown = reader.readLine();
@@ -210,7 +216,7 @@ public class UDP2P {
         partes = (int) Math.ceil((filesize/128.0));
         
         //partes 
-        ArrayList<Packet> packets = new ArrayList<Packet>(partes);
+        ArrayList<Packet> packets = new ArrayList<Packet>();
         
         ByteArrayInputStream in;
         ObjectInputStream is;
@@ -230,8 +236,13 @@ public class UDP2P {
         File file = new File("Download/"+fileDown+".temp");
         FileOutputStream fos = new FileOutputStream(file);
         
-        for (Packet packet : packets) {
-            fos.write(packet.getBytes());
+        if(packets.size() == partes){
+            for (Packet packet : packets) {
+                fos.write(packet.getBytes());
+            }
+        }
+        else{
+            System.out.println("FALHA DE RETRANSMISSAO NÃO IMPLEMENTADA AINDA.");
         }
         File fileName = new File("Download/"+packets.get(0).getFileName());
         file.renameTo(fileName);
@@ -239,7 +250,9 @@ public class UDP2P {
 
     }
     
-    
+    /**
+     * servidor comentado para não gera erro.
+     */
     /*public static void startServer() {
     (new Thread() {
         @Override
