@@ -46,6 +46,10 @@ public class UDPServer{
                     String file = data.replace("!!!SEARCHFILE!!!", "");
                     searchFile(file, request);
                 }
+                else if (data.contains("!!!DOWNFILE!!!")){
+                    String file = data.replace("!!!DOWNFILE!!!", "");
+                    downFile(file, request);
+                }
 
             } //while
         }catch (SocketException e){
@@ -143,8 +147,8 @@ public class UDPServer{
                 if((sCurrentLine.toUpperCase().contains(str.toUpperCase()) && !(List.contains(sCurrentLine)))){
                     List.add(sCurrentLine);
                 }
-            }
-        }
+            }//while
+        }//for
         
         DatagramPacket reply;
         
@@ -158,8 +162,65 @@ public class UDPServer{
             string = "Nome: "+formatstr[0]+" Tamanho: "+formatstr[1]+" Bytes";
             reply = new DatagramPacket(string.getBytes(), string.length(), request.getAddress(), request.getPort());
             aSocket.send(reply);
-        }
+        }//for
 
-    }
+    }//método
+    
+    private static void downFile(String str,  DatagramPacket request) throws FileNotFoundException, IOException{
+        ArrayList<String> List = new ArrayList<String>();
+        ArrayList<String> ListPeer = new ArrayList<String>();
+        File diretorio = new File("LogServer/FilesUsers/");
+        File diretorioPadrao = new File("LogServer/");
+        File[] arquivos = diretorio.listFiles();
+        FileReader fr;
+	BufferedReader br;
+        String fileDown;
+        String fileSize = null; 
+        String[] formatstr;
+
+            
+        for(int i = 0; i < arquivos.length; i++){
+            fr = new FileReader(arquivos[i]);
+            br = new BufferedReader(fr);
+
+            String sCurrentLine;
+
+            while ((sCurrentLine = br.readLine()) != null) {
+                if((sCurrentLine.toUpperCase().contains(str.toUpperCase()) && !(List.contains(sCurrentLine)))){
+                    formatstr = sCurrentLine .split("\\s+");
+                    fileDown = formatstr[0];
+                    fileSize = formatstr[1];
+                    List.add(arquivos[i].getName().replace(".txt", ""));
+                }
+            }//while
+        }//for
+       
+        fr = new FileReader(tempuser);
+        br = new BufferedReader(fr);
+        String sCurrentLine;
+            
+        while ((sCurrentLine = br.readLine()) != null) {
+            for(String string : List){
+                if(sCurrentLine.toUpperCase().contains(string.toUpperCase()) && !(ListPeer.contains(sCurrentLine))){
+                    ListPeer.add(sCurrentLine);
+                }
+            }//for
+        }//while
+        
+        DatagramPacket reply;
+        
+        String qtdeEcontrada = String.valueOf(ListPeer.size());
+        reply = new DatagramPacket(qtdeEcontrada.getBytes(), qtdeEcontrada.length(), request.getAddress(), request.getPort());
+        aSocket.send(reply);
+        
+        for(String string : ListPeer){
+            reply = new DatagramPacket(string.getBytes(), string.length(), request.getAddress(), request.getPort());
+            aSocket.send(reply);
+        }//for
+               
+        reply = new DatagramPacket(fileSize.getBytes(), fileSize.length(), request.getAddress(), request.getPort());
+        aSocket.send(reply);
+
+    }//método
     
 }//class

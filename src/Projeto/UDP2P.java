@@ -2,6 +2,7 @@ package Projeto;
 
 import java.io.*;
 import java.net.*;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
@@ -18,6 +19,7 @@ public class UDP2P {
     private static InetAddress aHost;
     private static DatagramSocket aSocket;
     private static int serverPort = 6666;
+    private static ArrayList<String> Peers;
 
      public static void main(String[] args) throws IOException {
       //startServer();
@@ -138,6 +140,9 @@ public class UDP2P {
         if(op == 1){
             searchFile();            
         }
+        else if(op == 3){
+            downFile();            
+        }
         return op;
         
     }
@@ -167,10 +172,52 @@ public class UDP2P {
             System.out.println(data);
             
         }
-
-
     }
 
+    private static void downFile() throws IOException {
+        BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        System.out.println("Digite o nome do Arquivo: ");
+        String fileDown = reader.readLine();
+        int filesize = 0;
+        int partes = 0;
+        String data = "!!!DOWNFILE!!!"+fileDown+".";
+        byte[] buffer = new byte[1000];// cria um buffer vazio para receber datagramas 
+
+        DatagramPacket msg = new DatagramPacket(data.getBytes(), data.length(), aHost, serverPort); // cria um pacote com os dados
+        aSocket.send(msg); // envia o pacote
+        
+        
+        DatagramPacket reply = new DatagramPacket(buffer, buffer.length);	
+        // aguarda datagramas 
+        aSocket.receive(reply);
+        data = new String(reply.getData(),reply.getOffset(),reply.getLength());
+        int fim = Integer.parseInt(data);
+
+        Peers = new ArrayList<String>();
+        for (int i = 0; i < fim; i++) {
+            buffer = new byte[1000];
+            reply = new DatagramPacket(buffer, buffer.length);	
+            // aguarda datagramas 
+            aSocket.receive(reply);
+            data = new String(reply.getData(),reply.getOffset(),reply.getLength());
+            Peers.add(data);
+        }
+        
+        System.out.println("PEERS");
+        for(String string : Peers){
+            System.out.println(string);
+        }
+        
+        reply = new DatagramPacket(buffer, buffer.length);	
+        // aguarda datagramas 
+        aSocket.receive(reply);
+        data = new String(reply.getData(),reply.getOffset(),reply.getLength());
+        filesize = Integer.parseInt(data);
+        partes = (int) Math.ceil((filesize/128.0));
+        
+        
+    }
+    
     public static void sendQtdeNameFiles(String data, DatagramPacket request, String pastaPredef) throws IOException{
        File f = null;
        File[] list;
