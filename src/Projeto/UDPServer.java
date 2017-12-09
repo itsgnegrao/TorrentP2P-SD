@@ -13,12 +13,15 @@ package Projeto;
 
 import java.net.*;
 import java.io.*;
+import java.util.ArrayList;
 
 public class UDPServer{
+    
+    private static DatagramSocket aSocket = null;
+    private static File tempuser = new File("LogServer/tempuser.txt");
+    
     public static void main(String args[]){
-    	DatagramSocket aSocket = null;
-        File tempuser = new File("LogServer/tempuser.txt");
-                
+    	              
         try{
             aSocket = new DatagramSocket(6666); // cria um socket datagrama em uma porta especifica
 
@@ -32,12 +35,16 @@ public class UDPServer{
                 String data = new String(request.getData(), request.getOffset(), request.getLength());
                 if(data.contains("!!!CONECTADO!!!")){
                     String apelido = data.replace("!!!CONECTADO!!!", "");
-                    novoUser(apelido,request,tempuser);
+                    newUser(apelido,request,tempuser);
                     getFiles(apelido, aSocket, request.getAddress(), request.getPort());
                 }
                 else if (data.contains("!!!SAIR!!!")){
                     String apelido = data.replace("!!!SAIR!!!", "");
                     removeUser(apelido, tempuser);
+                }
+                else if (data.contains("!!!SEARCHFILE!!!")){
+                    String file = data.replace("!!!SEARCHFILE!!!", "");
+                    searchFile(file, request);
                 }
 
             } //while
@@ -48,7 +55,7 @@ public class UDPServer{
         } //catch
     } //main
     
-    public static void getFiles(String apelido, DatagramSocket aSocket, InetAddress adress, int port) throws IOException{
+    private static void getFiles(String apelido, DatagramSocket aSocket, InetAddress adress, int port) throws IOException{
         FileWriter writer = new FileWriter("LogServer/FilesUsers/"+apelido+".txt", true);
         BufferedWriter bufferedWriter = new BufferedWriter(writer);
         
@@ -65,10 +72,8 @@ public class UDPServer{
         aSocket.receive(request);  // aguarda a chegada de datagramas
         data = new String(request.getData(),request.getOffset(), request.getLength());
         int fim = Integer.parseInt(data);
-        System.out.println("QTDE de arquivos: "+fim);
-
-        //fazer for para recebr os arquivo..
         
+        //recebe o nome e o tamanho em bytes de cada arquivo contido na pasta compartilhada
         for (int i = 0; i < fim ; i++) {
             buffer2 = new byte[1000]; // cria um buffer para receber requisicoes
             request = new DatagramPacket(buffer2, buffer2.length);
@@ -87,7 +92,7 @@ public class UDPServer{
         bufferedWriter.close();
     }//método
 
-    private static void novoUser(String apelido, DatagramPacket request, File tempuser) throws IOException {
+    private static void newUser(String apelido, DatagramPacket request, File tempuser) throws IOException {
         FileWriter writer = new FileWriter(tempuser, true);
         BufferedWriter bufferedWriter = new BufferedWriter(writer);
 
@@ -121,5 +126,40 @@ public class UDPServer{
        
     }
     
+    private static void searchFile(String str,  DatagramPacket request) throws FileNotFoundException, IOException{
+        ArrayList<String> List = new ArrayList<String>();
+        File diretorio = new File("LogServer/FilesUsers/");
+        File[] arquivos = diretorio.listFiles();
+        FileReader fr;
+	BufferedReader br;
+                
+        for(int i = 0; i < arquivos.length; i++){
+            fr = new FileReader(arquivos[i]);
+            br = new BufferedReader(fr);
+
+            String sCurrentLine;
+
+            while ((sCurrentLine = br.readLine()) != null) {
+                if((sCurrentLine.toUpperCase().contains(str.toUpperCase()) && !(List.contains(sCurrentLine)))){
+                    List.add(sCurrentLine);
+                }
+            }
+        }
+        
+        DatagramPacket reply;
+        
+        String qtdeEcontrada = String.valueOf(List.size());
+        reply = new DatagramPacket(qtdeEcontrada.getBytes(), qtdeEcontrada.length(), request.getAddress(), request.getPort());
+        aSocket.send(reply);
+        String[] formatstr;
+       
+        for(String string : List){
+            formatstr = string .split("\\s+");
+            string = "Nome: "+formatstr[0]+" Tamanho: "+formatstr[1]+" Bytes";
+            reply = new DatagramPacket(string.getBytes(), string.length(), request.getAddress(), request.getPort());
+            aSocket.send(reply);
+        }
+
+    }
     
 }//class
