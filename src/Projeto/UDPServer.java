@@ -170,11 +170,11 @@ public class UDPServer{
         ArrayList<String> List = new ArrayList<String>();
         ArrayList<String> ListPeer = new ArrayList<String>();
         File diretorio = new File("LogServer/FilesUsers/");
-        File diretorioPadrao = new File("LogServer/");
+        File diretorioPadrao = new File("Shared/");
         File[] arquivos = diretorio.listFiles();
         FileReader fr;
 	BufferedReader br;
-        String fileDown;
+        String fileDown = null;
         String fileSize = null; 
         String[] formatstr;
 
@@ -220,7 +220,36 @@ public class UDPServer{
                
         reply = new DatagramPacket(fileSize.getBytes(), fileSize.length(), request.getAddress(), request.getPort());
         aSocket.send(reply);
+        
+        //Daqui pra frente a implementação ocorre como se fosse e posteriormente sera no Servidor Do Cliente
+        int partes = (int) Math.ceil((Integer.parseInt(fileSize)/128.0));
 
+        ArrayList<Packet> packets = new ArrayList<Packet>(partes);
+            
+        FileInputStream outToClient = new FileInputStream(diretorioPadrao.getName()+"/"+fileDown);
+        byte[] buffer = new byte[128];
+        Packet pack;
+        
+        int count;
+        int i = 1;
+        while ((count=outToClient.read(buffer)) > 0) {
+            pack = new Packet(fileDown, i, buffer);
+            i = i+1;
+            packets.add(pack);
+        }
+        
+        
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        ObjectOutputStream os = new ObjectOutputStream(outputStream);
+        for (Packet packet : packets) {
+            System.out.println(packet.getPart());
+            os.writeObject(packet);
+            byte[] data = outputStream.toByteArray();
+            reply = new DatagramPacket(data, data.length, request.getAddress(), request.getPort());
+            aSocket.send(reply);
+        }
+
+        
     }//método
     
 }//class

@@ -1,7 +1,9 @@
 package Projeto;
 
 import java.io.*;
+import static java.lang.System.in;
 import java.net.*;
+import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -12,7 +14,6 @@ import javax.swing.JOptionPane;
  * @author itsgnegrao
  */
 public class UDP2P {
-
     
     private boolean run = true;
     private static String apelido;
@@ -87,44 +88,6 @@ public class UDP2P {
                 Logger.getLogger(UDP2P.class.getName()).log(Level.SEVERE, null, ex);
             }
 
-            
-           /* while(true){
-                try {
-                    System.out.println(apelido+": ");
-                    data = apelido +": "+reader.readLine();
-                    aSocket = new DatagramSocket(); //cria um socket datagrama
-
-                   // byte[] m = args[0].getBytes(); // transforma a mensagem em bytes
-                    byte[] m = data.getBytes(); // transforma a mensagem em bytes 
-
-                    // armazena o IP do destino 
-                    //InetAddress aHost = InetAddress.getByName(args[1]); 
-                    int serverPort = 6666; // porta do servidor
-
-                    // cria um pacote datagrama 
-                    DatagramPacket request =
-                    new DatagramPacket(m,  data.length(), aHost, serverPort);
-                    //new DatagramPacket(m,  args[0].length(), aHost, serverPort);
-
-                    // envia o pacote 
-                    aSocket.send(request);			                        
-
-                    // cria um buffer vazio para receber datagramas 
-                    byte[] buffer = new byte[1000];
-                    DatagramPacket reply = new DatagramPacket(buffer, buffer.length);	
-1
-                    // aguarda datagramas 
-                    aSocket.receive(reply);
-                    //System.out.println("Resposta: " + new String(reply.getData()));
-
-                    // libera o socket 
-                    aSocket.close();	
-                } catch (SocketException e){
-                    System.out.println("Socket: " + e.getMessage());
-                }catch (IOException e){1
-                    System.out.println("IO: " + e.getMessage());
-                } //catch       
-            }*/
         }
     }).start();//Thread
     }//metodo
@@ -173,7 +136,38 @@ public class UDP2P {
             
         }
     }
+    
+    public static void sendQtdeNameFiles(String data, DatagramPacket request, String pastaPredef) throws IOException{
+       File f = null;
+       File[] list;
+       
+       if(data.contains("FILES")){
+           
+            f = new File(pastaPredef);
+            list = f.listFiles();
+           
+            data = String.valueOf(list.length);
 
+            DatagramPacket reply = new DatagramPacket(data.getBytes(), data.length(), request.getAddress(), request.getPort()); // cria um pacote com os dados
+            aSocket.send(reply); // envia o pacote
+            System.out.println(data);
+            
+                    
+            for (File file : list) {
+                data = file.getName();
+                reply = new DatagramPacket(data.getBytes(), data.length(), request.getAddress(), request.getPort()); // cria um pacote com os dados
+                aSocket.send(reply); // envia o pacote
+                
+                data =  String.valueOf(file.length());
+                reply = new DatagramPacket(data.getBytes(), data.length(), request.getAddress(), request.getPort()); // cria um pacote com os dados
+                aSocket.send(reply); // envia o pacote       
+                 
+            }
+
+        }
+
+    }
+  
     private static void downFile() throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("Digite o nome do Arquivo: ");
@@ -215,40 +209,37 @@ public class UDP2P {
         filesize = Integer.parseInt(data);
         partes = (int) Math.ceil((filesize/128.0));
         
+        //partes 
+        ArrayList<Packet> packets = new ArrayList<Packet>(partes);
         
+        ByteArrayInputStream in;
+        ObjectInputStream is;
+        for (int i = 0; i < partes; i++) {
+            reply = new DatagramPacket(buffer, buffer.length);	
+            // aguarda datagramas 
+            aSocket.receive(reply);          
+            in = new ByteArrayInputStream(reply.getData());
+            is = new ObjectInputStream(in);
+            try {
+                Packet packet = (Packet) is.readObject();
+                packets.add(packet);
+            } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+            }
+        }
+        File file = new File("Download/"+fileDown+".temp");
+        FileOutputStream fos = new FileOutputStream(file);
+        
+        for (Packet packet : packets) {
+            fos.write(packet.getBytes());
+        }
+        File fileName = new File("Download/"+packets.get(0).getFileName());
+        file.renameTo(fileName);
+        fos.close();
+
     }
     
-    public static void sendQtdeNameFiles(String data, DatagramPacket request, String pastaPredef) throws IOException{
-       File f = null;
-       File[] list;
-       
-       if(data.contains("FILES")){
-           
-            f = new File(pastaPredef);
-            list = f.listFiles();
-           
-            data = String.valueOf(list.length);
-
-            DatagramPacket reply = new DatagramPacket(data.getBytes(), data.length(), request.getAddress(), request.getPort()); // cria um pacote com os dados
-            aSocket.send(reply); // envia o pacote
-            System.out.println(data);
-            
-                    
-            for (File file : list) {
-                data = file.getName();
-                reply = new DatagramPacket(data.getBytes(), data.length(), request.getAddress(), request.getPort()); // cria um pacote com os dados
-                aSocket.send(reply); // envia o pacote
-                
-                data =  String.valueOf(file.length());
-                reply = new DatagramPacket(data.getBytes(), data.length(), request.getAddress(), request.getPort()); // cria um pacote com os dados
-                aSocket.send(reply); // envia o pacote       
-                 
-            }
-
-        }
-
-    }
-  
+    
     /*public static void startServer() {
     (new Thread() {
         @Override
