@@ -19,11 +19,12 @@ public class UDPServer{
     
     private static DatagramSocket aSocket = null;
     private static File tempuser = new File("LogServer/tempuser.txt");
+    private static int serverPort = 6667;
     
     public static void main(String args[]){
     	              
         try{
-            aSocket = new DatagramSocket(6666); // cria um socket datagrama em uma porta especifica
+            aSocket = new DatagramSocket(serverPort); // cria um socket datagrama em uma porta especifica
 
             while(true){
                 byte[] buffer = new byte[1000]; // cria um buffer para receber requisicoes
@@ -235,31 +236,29 @@ public class UDPServer{
          */
         int partes = (int) Math.ceil((Integer.parseInt(fileSize)/128.0));
 
-        ArrayList<Packet> packets = new ArrayList<Packet>(partes);
+        ArrayList<Packet> packets = new ArrayList<>();
             
         FileInputStream outToClient = new FileInputStream(diretorioPadrao.getName()+"/"+fileDown);
         byte[] buffer = new byte[128];
-        Packet pack;
-        
+
         int count;
         int i = 1;
         while ((count=outToClient.read(buffer)) > 0) {
-            pack = new Packet(fileDown, i, buffer);
-            i = i+1;
+            Packet pack = new Packet(fileDown, i, buffer);
             packets.add(pack);
+            i = i+1;
+            buffer = new byte[128];
         }
-        
-        
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        ObjectOutputStream os = new ObjectOutputStream(outputStream);
+
         for (Packet packet : packets) {
-            System.out.println(packet.getPart());
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            ObjectOutputStream os = new ObjectOutputStream(outputStream);
             os.writeObject(packet);
+            System.out.println(new String(packet.getBytes()));
             byte[] data = outputStream.toByteArray();
             reply = new DatagramPacket(data, data.length, request.getAddress(), request.getPort());
             aSocket.send(reply);
-        }
-
+        }      
         
     }//método
     

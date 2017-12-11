@@ -19,7 +19,7 @@ public class UDP2P {
     private static String apelido;
     private static InetAddress aHost;
     private static DatagramSocket aSocket;
-    private static int serverPort = 6666;
+    private static int serverPort = 6667;
     private static ArrayList<String> Peers;
 
      public static void main(String[] args) throws IOException {
@@ -46,9 +46,7 @@ public class UDP2P {
                     
 
                     /* cria um pacote datagrama */
-                    DatagramPacket request =
-                    new DatagramPacket(m,  data.length(), aHost, serverPort);
-                    //new DatagramPacket(m,  args[0].length(), aHost, serverPort);
+                    DatagramPacket request = new DatagramPacket(m,  data.length(), aHost, serverPort);
 
                     /* envia o pacote */
                     aSocket.send(request);
@@ -86,13 +84,15 @@ public class UDP2P {
                 Logger.getLogger(UDP2P.class.getName()).log(Level.SEVERE, null, ex);
             } catch (IOException ex) {
                 Logger.getLogger(UDP2P.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(UDP2P.class.getName()).log(Level.SEVERE, null, ex);
             }
 
         }
     }).start();//Thread
     }//metodo
    
-    public static int Menu() throws IOException {
+    public static int Menu() throws IOException, ClassNotFoundException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("---MENU---:");
         System.out.println("1: Procurar Arquivo.");
@@ -168,7 +168,7 @@ public class UDP2P {
 
     }
   
-    private static void downFile() throws IOException {
+    private static void downFile() throws IOException, ClassNotFoundException {
         /**
          * Aqui implementar tambem a parte que ira buscar em cada Peer
          * maanter uma lista de Peers e seus Respectivos Pacotes Seria Bom
@@ -208,6 +208,7 @@ public class UDP2P {
             System.out.println(string);
         }
         
+        buffer = new byte[1000];
         reply = new DatagramPacket(buffer, buffer.length);	
         // aguarda datagramas 
         aSocket.receive(reply);
@@ -218,47 +219,50 @@ public class UDP2P {
         //partes 
         ArrayList<Packet> packets = new ArrayList<Packet>();
         
-        ByteArrayInputStream in;
-        ObjectInputStream is;
         for (int i = 0; i < partes; i++) {
-            reply = new DatagramPacket(buffer, buffer.length);	
-            // aguarda datagramas 
-            aSocket.receive(reply);          
-            in = new ByteArrayInputStream(reply.getData());
-            is = new ObjectInputStream(in);
-            try {
-                Packet packet = (Packet) is.readObject();
-                packets.add(packet);
-            } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-            }
+            DatagramPacket part = new DatagramPacket(buffer, buffer.length);	
+            // aguarda datagramas 33
+            aSocket.receive(part);          
+            ByteArrayInputStream in = new ByteArrayInputStream(part.getData());
+            ObjectInputStream is = new ObjectInputStream(in);
+            Object o = is.readObject();
+            Packet packet = new Packet(o);
+            packets.add(packet);
         }
-        File file = new File("Download/"+fileDown+".temp");
-        FileOutputStream fos = new FileOutputStream(file);
-        
+                
         if(packets.size() == partes){
-            for (Packet packet : packets) {
+            File file = new File("Download/"+fileDown+".temp");
+            FileOutputStream fos = new FileOutputStream(file);
+            for (int i = 0; i < partes; i++) {
+                Packet packet = packets.get(i);
                 fos.write(packet.getBytes());
             }
+            File fileName = new File("Download/"+packets.get(0).getFileName());
+            file.renameTo(fileName);
+            fos.close();
         }
         else{
             System.out.println("FALHA DE RETRANSMISSAO NÃO IMPLEMENTADA AINDA.");
         }
-        File fileName = new File("Download/"+packets.get(0).getFileName());
-        file.renameTo(fileName);
-        fos.close();
+        
 
     }
     
     /**
      * servidor comentado para não gera erro.
      */
-    /*public static void startServer() {
+    public static void startServer() {
     (new Thread() {
+        int port = 6666;
+        DatagramSocket aSocket = null;
+        
+        public void print(){
+            System.out.println("ENTRWEI");
+        }
+        
         @Override
         public void run() {
-            int port = 6666;
-            DatagramSocket aSocket = null;
+           
             try{
                 System.out.println(port);
                 aSocket = new DatagramSocket(port); // cria um socket datagrama em uma porta especifica
@@ -272,12 +276,14 @@ public class UDP2P {
                     // imprime e envia o datagrama de volta ao cliente 
                     String data = new String(request.getData(),request.getOffset(),request.getLength());
                     System.out.println(data);
-                    if(data.equals("FILES")){
+                    print();
+                    /*if(data.equals("FILES")){
                         sendQtdeNameFiles(data, aSocket, request,"Shared/");
                     }
                     DatagramPacket reply = new DatagramPacket(request.getData(), request.getLength(), request.getAddress(), request.getPort()); // cria um pacote com os dados
                     System.out.println(apelido+": ");
-                    aSocket.send(reply); // envia o pacote
+                    aSocket.send(reply); // envia o pacote*/
+                    
                 } //while
             }catch (SocketException e){
                System.out.println("Socket Server: " + e.getMessage());
@@ -286,5 +292,5 @@ public class UDP2P {
             } //catch  
         }
     }).start();//Thread
-    }//metodo	     */
+    }//metodo	     
 }//class

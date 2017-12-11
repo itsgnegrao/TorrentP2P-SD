@@ -1,6 +1,5 @@
 package Projeto;
 
-import com.sun.org.apache.xml.internal.utils.SerializableLocatorImpl;
 import java.io.Serializable;
 
 /**
@@ -8,26 +7,39 @@ import java.io.Serializable;
  * @author itsgnegrao
  */
 public class Packet implements Serializable{
-    private final  String fileName;
-    private final  int part;
-    private final  byte[] bytes;
+    private String fileName;
+    private int part;
+    private byte[] bytes;
 
-    public Packet(String fileName, int part, byte[] bytes) {
-        this.part = part;
-        this.fileName = fileName;
-        this.bytes = bytes;
+    public Packet(Object o) {
+        Packet pack = (Packet) o;
+        part = pack.getPart();
+        fileName = pack.getFileName();
+        bytes = pack.getBytes();
+    }
+    
+    public Packet(String fileNamerec, int partrec, byte[] bytesrec) {
+        part = partrec;
+        fileName = fileNamerec;
+        bytes = bytesrec;
     }
 
     public String getFileName() {
-        return this.fileName;
+        return fileName;
     }
 
     public int getPart() {
-        return this.part;
+        return part;
     }
 
     public byte[] getBytes() {
-        return this.bytes;
+        return bytes;
+    }
+    
+    public void print(){
+        //System.out.println(new String(bytes));
+        System.out.println(part);
+        System.out.println(fileName);
     }
  
 }
