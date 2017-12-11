@@ -1,20 +1,19 @@
-package Projeto;
-
 import java.io.*;
 import static java.lang.System.in;
 import java.net.*;
 import java.io.ByteArrayInputStream;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.JOptionPane;
+import javax.swing.UIManager;
 
 /**
  *
  * @author itsgnegrao
  */
-public class UDP2P {
-    
+public class UDP2P {   
     private boolean run = true;
     private static String apelido;
     private static InetAddress aHost;
@@ -22,7 +21,7 @@ public class UDP2P {
     private static int serverPort = 6667;
     private static ArrayList<String> Peers;
 
-     public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws IOException {
       startServer();
       startCliente("127.0.0.1");//Endereço do Servidor.
     }//main
@@ -34,7 +33,11 @@ public class UDP2P {
         public void run() {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
             String data = " ";
-            apelido = JOptionPane.showInputDialog("Digite seu Apelido");
+            try {
+                apelido = InetAddress.getLocalHost().getHostName();
+            } catch (UnknownHostException ex) {
+                Logger.getLogger(UDP2P.class.getName()).log(Level.SEVERE, null, ex);
+            }
             
             data = "!!!CONECTADO!!!"+apelido;
             try {
@@ -96,12 +99,15 @@ public class UDP2P {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("---MENU---:");
         System.out.println("1: Procurar Arquivo.");
-        System.out.println("OFF 2: Criar Novo Arquivo Compartilhado.");
+        System.out.println("2: Criar Novo Arquivo Compartilhado.");
         System.out.println("3: Baixar Arquivo.");
         System.out.println("0: Sair.");
         int op = Integer.valueOf(reader.readLine());
         if(op == 1){
             searchFile();            
+        }
+        else if(op == 2){
+            newFile();            
         }
         else if(op == 3){
             downFile();            
@@ -169,11 +175,6 @@ public class UDP2P {
     }
   
     private static void downFile() throws IOException, ClassNotFoundException {
-        /**
-         * Aqui implementar tambem a parte que ira buscar em cada Peer
-         * maanter uma lista de Peers e seus Respectivos Pacotes Seria Bom
-         * Implementar Posteriormente.
-         */
         
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("Digite o nome do Arquivo: ");
@@ -223,8 +224,21 @@ public class UDP2P {
         ArrayList<Integer> PeerParts;
         for (Peer peer : Peers) {
             PeerParts = peer.getParts();
-            System.out.println(peer.getNick() +" "+peer.getIp()+":"+peer.getPort());
-            System.out.println(PeerParts);
+            
+            data = "!!!PARTS!!!";
+            msg = new DatagramPacket(data.getBytes(), data.length(), peer.getIp(), 6666); // cria um pacote com os dados
+            aSocket.send(msg); // envia o pacote
+            
+            data = fileDown;
+            msg = new DatagramPacket(data.getBytes(), data.length(), peer.getIp(), 6666); // cria um pacote com os dados
+            aSocket.send(msg); // envia o pacote
+                             
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            ObjectOutputStream os = new ObjectOutputStream(outputStream);
+            os.writeObject(PeerParts);
+            byte[] list = outputStream.toByteArray();
+            msg = new DatagramPacket(list, list.length, peer.getIp(), 6666);
+            aSocket.send(msg);
         }
         
         //partes 
@@ -244,6 +258,7 @@ public class UDP2P {
         if(packets.size() == partes){
             File file = new File("Download/"+fileDown+".temp");
             FileOutputStream fos = new FileOutputStream(file);
+            Collections.sort (packets, new ComparePacks());
             for (int i = 0; i < partes; i++) {
                 Packet packet = packets.get(i);
                 fos.write(packet.getBytes());
@@ -259,24 +274,27 @@ public class UDP2P {
 
     }
     
-    /**
-     * servidor comentado para não gera erro.
-     */
+    private static void newFile() {
+        UIManager.put("swing.boldMetal", Boolean.FALSE); 
+        FileChooser.createAndShowGUI(new File("Shared/"));
+        
+        //implementar broadcast
+        //adicionar novo aquivo no indice
+    }
+
     public static void startServer() {
     (new Thread() {
         int port = 6666;
         DatagramSocket aSocket = null;
-        
-        public void print(){
-            System.out.println("ENTRWEI");
-        }
-        
+        File diretorioPadrao = new File("Shared/");
+       
         @Override
         public void run() {
            
             try{
                 System.out.println(port);
                 aSocket = new DatagramSocket(port); // cria um socket datagrama em uma porta especifica
+                
 
                 while(true){
                     byte[] buffer = new byte[1000]; // cria um buffer para receber requisicoes
@@ -286,22 +304,69 @@ public class UDP2P {
                     aSocket.receive(request);  // aguarda a chegada de datagramas
                     // imprime e envia o datagrama de volta ao cliente 
                     String data = new String(request.getData(),request.getOffset(),request.getLength());
-                    System.out.println(data);
-                    print();
-                    /*if(data.equals("FILES")){
-                        sendQtdeNameFiles(data, aSocket, request,"Shared/");
+                    if(data.contains("!!!PARTS!!!")){
+                        enviaFiles();                        
                     }
-                    DatagramPacket reply = new DatagramPacket(request.getData(), request.getLength(), request.getAddress(), request.getPort()); // cria um pacote com os dados
-                    System.out.println(apelido+": ");
-                    aSocket.send(reply); // envia o pacote*/
+                    
                     
                 } //while
             }catch (SocketException e){
                System.out.println("Socket Server: " + e.getMessage());
             }catch (IOException e) {
                System.out.println("IO Server: " + e.getMessage());
+            } catch (ClassNotFoundException ex) {
+                Logger.getLogger(UDP2P.class.getName()).log(Level.SEVERE, null, ex);
             } //catch  
         }
+
+        private void enviaFiles() throws IOException, ClassNotFoundException {
+            byte[] buffer = new byte[1024];
+            DatagramPacket request = new DatagramPacket(buffer, buffer.length);
+            aSocket.receive(request);  // aguarda a chegada de datagramas
+            String data = new String(request.getData(),request.getOffset(),request.getLength());
+            String fileDown = data;
+
+            File[] arquivos = diretorioPadrao.listFiles();
+
+            for(int i = 0; i < arquivos.length; i++){
+               if(arquivos[i].getName().toUpperCase().contains(fileDown.toUpperCase())){
+                    fileDown = arquivos[i].getName();
+               }
+            }//for
+
+            ArrayList<Integer> parts;
+            DatagramPacket part = new DatagramPacket(buffer, buffer.length);	
+            aSocket.receive(part);          
+            ByteArrayInputStream in = new ByteArrayInputStream(part.getData());
+            ObjectInputStream is = new ObjectInputStream(in);
+            parts = (ArrayList < Integer >) is.readObject();
+
+            ArrayList<Packet> packets = new ArrayList<>();
+
+            FileInputStream outToClient = new FileInputStream(diretorioPadrao.getName()+"/"+fileDown);
+            byte[] buff = new byte[128];
+
+            int count;
+            int i = 1;
+            while ((count=outToClient.read(buff)) > 0) {
+                Packet pack = new Packet(fileDown, i, buff);
+                if(parts.contains(i)){
+                    packets.add(pack);
+                }
+                i = i+1;
+                buff = new byte[128];
+            }
+
+            for (Packet packet : packets) {
+                ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+                ObjectOutputStream os = new ObjectOutputStream(outputStream);
+                os.writeObject(packet);
+                byte[] pack = outputStream.toByteArray();
+                DatagramPacket reply = new DatagramPacket(pack, pack.length, request.getAddress(), request.getPort());
+                aSocket.send(reply);
+            }      
+        }
+        
     }).start();//Thread
     }//metodo	     
 }//class

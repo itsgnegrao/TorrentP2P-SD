@@ -1,5 +1,3 @@
-package Projeto;
-
 import java.io.Serializable;
 
 /**

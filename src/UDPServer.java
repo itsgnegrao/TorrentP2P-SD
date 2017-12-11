@@ -1,5 +1,3 @@
-package Projeto;
-
 /**
  *
  * @author itsgnegrao
@@ -168,12 +166,7 @@ public class UDPServer{
     }//método
     
     private static void downFile(String str,  DatagramPacket request) throws FileNotFoundException, IOException{
-        /**
-         * Parte dessa função ficara implementada no servidor do Cliente e não neste
-         * esta aqui só para teste por enquanto 
-         * só precisa adaptar no do servidor do cliente
-         * pois não ha como executar ambos ao mesmo tempo.
-         */
+
         ArrayList<String> List = new ArrayList<String>();
         ArrayList<String> ListPeer = new ArrayList<String>();
         File diretorio = new File("LogServer/FilesUsers/");
@@ -228,36 +221,6 @@ public class UDPServer{
         reply = new DatagramPacket(fileSize.getBytes(), fileSize.length(), request.getAddress(), request.getPort());
         aSocket.send(reply);
         
-
-        /**
-         *Daqui pra frente a implementação ocorre como se fosse e posteriormente sera no Servidor Do Cliente
-         *mesclar algumas funcionalidades no mesmo
-         *o servidor vai ficar sómente pra envio de arquivos.
-         */
-        int partes = (int) Math.ceil((Integer.parseInt(fileSize)/128.0));
-
-        ArrayList<Packet> packets = new ArrayList<>();
-            
-        FileInputStream outToClient = new FileInputStream(diretorioPadrao.getName()+"/"+fileDown);
-        byte[] buffer = new byte[128];
-
-        int count;
-        int i = 1;
-        while ((count=outToClient.read(buffer)) > 0) {
-            Packet pack = new Packet(fileDown, i, buffer);
-            packets.add(pack);
-            i = i+1;
-            buffer = new byte[128];
-        }
-
-        for (Packet packet : packets) {
-            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-            ObjectOutputStream os = new ObjectOutputStream(outputStream);
-            os.writeObject(packet);
-            byte[] data = outputStream.toByteArray();
-            reply = new DatagramPacket(data, data.length, request.getAddress(), request.getPort());
-            aSocket.send(reply);
-        }      
         
     }//método
     
