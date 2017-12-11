@@ -17,6 +17,8 @@ import static sun.misc.GThreadHelper.lock;
  * @author itsgnegrao
  */
 public class UDP2P {   
+
+    private static Thread server;
     private boolean run = true;
     private static String apelido;
     private static InetAddress aHost;
@@ -90,6 +92,8 @@ public class UDP2P {
                     
                     /* libera o socket */
                     aSocket.close();
+                    System.out.println("SAI.");
+                    server.interrupt();
                     
             } catch (SocketException ex) {
                 Logger.getLogger(UDP2P.class.getName()).log(Level.SEVERE, null, ex);
@@ -325,7 +329,7 @@ public class UDP2P {
     }
 
     public static void startServer() {
-    (new Thread() {
+    (server = new Thread() {
         int port = 6666;
         DatagramSocket aSocket = null;
         File diretorioPadrao = caminhoComp;
@@ -338,7 +342,7 @@ public class UDP2P {
                 aSocket = new DatagramSocket(port); // cria um socket datagrama em uma porta especifica
                 
 
-                while(true){
+                while(server.isInterrupted()){
                     byte[] buffer = new byte[1000]; // cria um buffer para receber requisicoes
 
                     // cria um pacote vazio 
