@@ -1,0 +1,2 @@
+resumo.txt 2176
+weka.log 4864

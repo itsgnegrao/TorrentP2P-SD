@@ -265,7 +265,7 @@ public class UDP2P {
         for (int i = 0; i < partes; i++) {
             DatagramPacket part = new DatagramPacket(buffer, buffer.length);	
             // aguarda datagramas 33
-            aSocket.receive(part);          
+            aSocket.receive(part);  
             ByteArrayInputStream in = new ByteArrayInputStream(part.getData());
             ObjectInputStream is = new ObjectInputStream(in);
             Object o = is.readObject();
@@ -337,7 +337,6 @@ public class UDP2P {
                 System.out.println(port);
                 aSocket = new DatagramSocket(port); // cria um socket datagrama em uma porta especifica
                 
-
                 while(true){
                     byte[] buffer = new byte[1000]; // cria um buffer para receber requisicoes
 
@@ -347,7 +346,7 @@ public class UDP2P {
                     // imprime e envia o datagrama de volta ao cliente 
                     String data = new String(request.getData(),request.getOffset(),request.getLength());
                     if(data.contains("!!!PARTS!!!")){
-                        enviaFiles();                        
+                        enviaFiles();
                     }
                     
                     
@@ -390,6 +389,7 @@ public class UDP2P {
 
             int count;
             int i = 1;
+            System.out.println("ENTRIRIIRRIRI");
             while ((count=outToClient.read(buff)) > 0) {
                 Packet pack = new Packet(fileDown, i, buff);
                 if(parts.contains(i)){

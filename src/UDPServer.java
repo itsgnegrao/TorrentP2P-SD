@@ -199,7 +199,7 @@ public class UDPServer{
                 }
             }//while
         }//for
-       
+        
         fr = new FileReader(tempuser);
         br = new BufferedReader(fr);
         String sCurrentLine;
@@ -210,8 +210,8 @@ public class UDPServer{
                     ListPeer.add(sCurrentLine);
                 }
             }//for
-        }//while
-        
+        }//while]
+
         DatagramPacket reply;
         
         String qtdeEcontrada = String.valueOf(ListPeer.size());
@@ -225,7 +225,6 @@ public class UDPServer{
                
         reply = new DatagramPacket(fileSize.getBytes(), fileSize.length(), request.getAddress(), request.getPort());
         aSocket.send(reply);
-        
         
     }//método
 
