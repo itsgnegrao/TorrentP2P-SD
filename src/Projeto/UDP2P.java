@@ -214,6 +214,19 @@ public class UDP2P {
         filesize = Integer.parseInt(data);
         partes = (int) Math.ceil((filesize/128.0));
         
+        
+        for (int i = 0, j = 0; i < partes; i++,j++) {
+            if(j > Peers.size()-1) j=0;
+            Peers.get(j).addPart(i+1);
+        }
+        
+        ArrayList<Integer> PeerParts;
+        for (Peer peer : Peers) {
+            PeerParts = peer.getParts();
+            System.out.println(peer.getNick() +" "+peer.getIp()+":"+peer.getPort());
+            System.out.println(PeerParts);
+        }
+        
         //partes 
         ArrayList<Packet> packets = new ArrayList<Packet>();
         

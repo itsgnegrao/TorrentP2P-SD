@@ -254,7 +254,6 @@ public class UDPServer{
             ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
             ObjectOutputStream os = new ObjectOutputStream(outputStream);
             os.writeObject(packet);
-            System.out.println(new String(packet.getBytes()));
             byte[] data = outputStream.toByteArray();
             reply = new DatagramPacket(data, data.length, request.getAddress(), request.getPort());
             aSocket.send(reply);

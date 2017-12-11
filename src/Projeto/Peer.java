@@ -16,12 +16,12 @@ public class Peer {
     ArrayList<Integer> parts;
 
     Peer(String string) throws UnknownHostException {
-        this.parts = new ArrayList<>();
+        parts = new ArrayList<>();
         String[] formatstr;
         formatstr = string .split("\\s+");
-        this.nick = formatstr[0];
-        this.ip = InetAddress.getByName(formatstr[1]);
-        this.port = Integer.parseInt(formatstr[2]);
+        nick = formatstr[0];
+        ip = InetAddress.getByName(formatstr[1].replace("/", ""));
+        port = Integer.parseInt(formatstr[2]);
     }
 
     public String getNick() {
@@ -35,9 +35,13 @@ public class Peer {
     public InetAddress getIp() {
         return ip;
     }
-  
+
+    public ArrayList<Integer> getParts() {
+        return parts;
+    }
+    
     public void addPart(int part){
-        this.parts.add(part);
+        parts.add(part);
     }
     
 }
