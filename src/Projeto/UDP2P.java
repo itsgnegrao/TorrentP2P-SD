@@ -23,8 +23,8 @@ public class UDP2P {
     private static ArrayList<String> Peers;
 
      public static void main(String[] args) throws IOException {
-      //startServer();
-      startCliente("127.0.0.1");
+      startServer();
+      startCliente("127.0.0.1");//Endereço do Servidor.
     }//main
   
     public static void startCliente(String ip_dest) throws UnknownHostException{
@@ -194,19 +194,17 @@ public class UDP2P {
         int fim = Integer.parseInt(data);
 
         Peers = new ArrayList<String>();
+        ArrayList<Peer> Peers = new ArrayList<>();
+       
         for (int i = 0; i < fim; i++) {
             buffer = new byte[1000];
             reply = new DatagramPacket(buffer, buffer.length);	
             // aguarda datagramas 
             aSocket.receive(reply);
-            data = new String(reply.getData(),reply.getOffset(),reply.getLength());
-            Peers.add(data);
+            Peer peer = new Peer(new String(reply.getData(),reply.getOffset(),reply.getLength()));
+            Peers.add(peer);
         }
-        
-        System.out.println("PEERS");
-        for(String string : Peers){
-            System.out.println(string);
-        }
+      
         
         buffer = new byte[1000];
         reply = new DatagramPacket(buffer, buffer.length);	
