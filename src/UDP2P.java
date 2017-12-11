@@ -107,17 +107,15 @@ public class UDP2P {
    
     public static int Menu() throws IOException, ClassNotFoundException, UnknownHostException, InterruptedException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
+        int op = 0;
         System.out.println("---MENU---:");
         System.out.println("1: Procurar Arquivo.");
         System.out.println("2: Criar Novo Arquivo Compartilhado.");
         System.out.println("3: Baixar Arquivo.");
+        System.out.println("4: Restart.");
         System.out.println("0: Sair.");
-        int op = Integer.valueOf(reader.readLine());
-        File[] qtdFilesnew = caminhoComp.listFiles();
-        if(qtdFiles.length != qtdFilesnew.length){
-            startCliente(apelido);
-        }
-        
+        op = Integer.valueOf(reader.readLine());
+
         if(op == 1){
             searchFile();            
         }
@@ -127,7 +125,12 @@ public class UDP2P {
         else if(op == 3){
             downFile();            
         }
+        else if(op == 4){
+            restart();          
+        }
+    
         return op;
+            
         
     }
     
@@ -280,7 +283,10 @@ public class UDP2P {
             }
             File fileName = new File("Download/"+packets.get(0).getFileName());
             file.renameTo(fileName);
+            File fileNameShared = new File("Shared/"+packets.get(0).getFileName());
+            CopiaArquivo.copyFile(fileName, fileNameShared);
             fos.close();
+            restart();
         }
         else{
             System.out.println("FALHA DE RETRANSMISSAO NÃO IMPLEMENTADA AINDA.");
@@ -304,6 +310,18 @@ public class UDP2P {
         frame.setLocationRelativeTo(null);
         frame.setSize(500, 200);
         frame.setVisible(true);
+       
+    }
+    
+    private static void restart() throws IOException{
+        /* cria um pacote datagrama */
+        String data = "!!!SAIR!!!"+apelido;
+        DatagramPacket request = new DatagramPacket(data.getBytes(),  data.length(), aHost, serverPort);
+        /* envia o pacote */
+        aSocket.send(request);
+        /* libera o socket */
+        aSocket.close();
+        startCliente(apelido);
     }
 
     public static void startServer() {
