@@ -2,12 +2,15 @@ import java.io.*;
 import static java.lang.System.in;
 import java.net.*;
 import java.io.ByteArrayInputStream;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.UIManager;
+import static sun.misc.GThreadHelper.lock;
 
 /**
  *
@@ -19,16 +22,21 @@ public class UDP2P {
     private static InetAddress aHost;
     private static DatagramSocket aSocket;
     private static int serverPort = 6667;
+    private static String serverIp = "127.0.0.1";
     private static ArrayList<String> Peers;
+    private static File caminhoComp = new File("Shared/");
+    private static File[] qtdFiles = caminhoComp.listFiles();
+    private static Thread client;
+    
 
     public static void main(String[] args) throws IOException {
       startServer();
-      startCliente("127.0.0.1");//Endereço do Servidor.
+      startCliente(serverIp);//Endereço do Servidor.
     }//main
   
     public static void startCliente(String ip_dest) throws UnknownHostException{
     aHost = InetAddress.getByName(ip_dest); 
-    (new Thread() {
+    (client = new Thread() {
         @Override
         public void run() {
             BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
@@ -89,13 +97,15 @@ public class UDP2P {
                 Logger.getLogger(UDP2P.class.getName()).log(Level.SEVERE, null, ex);
             } catch (ClassNotFoundException ex) {
                 Logger.getLogger(UDP2P.class.getName()).log(Level.SEVERE, null, ex);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(UDP2P.class.getName()).log(Level.SEVERE, null, ex);
             }
 
         }
     }).start();//Thread
     }//metodo
    
-    public static int Menu() throws IOException, ClassNotFoundException {
+    public static int Menu() throws IOException, ClassNotFoundException, UnknownHostException, InterruptedException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
         System.out.println("---MENU---:");
         System.out.println("1: Procurar Arquivo.");
@@ -103,6 +113,11 @@ public class UDP2P {
         System.out.println("3: Baixar Arquivo.");
         System.out.println("0: Sair.");
         int op = Integer.valueOf(reader.readLine());
+        File[] qtdFilesnew = caminhoComp.listFiles();
+        if(qtdFiles.length != qtdFilesnew.length){
+            startCliente(apelido);
+        }
+        
         if(op == 1){
             searchFile();            
         }
@@ -274,19 +289,28 @@ public class UDP2P {
 
     }
     
-    private static void newFile() {
+    private static void newFile() throws UnknownHostException, IOException, InterruptedException {
         UIManager.put("swing.boldMetal", Boolean.FALSE); 
-        FileChooser.createAndShowGUI(new File("Shared/"));
         
-        //implementar broadcast
-        //adicionar novo aquivo no indice
+        JFrame frame = new JFrame("FileChooser");
+        frame.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+        FileChooser fileChooser = new FileChooser(caminhoComp);
+
+        //Add content to the window.
+        frame.add(fileChooser);
+
+        //Display the window.
+        frame.pack();
+        frame.setLocationRelativeTo(null);
+        frame.setSize(500, 200);
+        frame.setVisible(true);
     }
 
     public static void startServer() {
     (new Thread() {
         int port = 6666;
         DatagramSocket aSocket = null;
-        File diretorioPadrao = new File("Shared/");
+        File diretorioPadrao = caminhoComp;
        
         @Override
         public void run() {

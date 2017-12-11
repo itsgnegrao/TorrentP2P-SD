@@ -57,6 +57,8 @@ public class FileChooser extends JPanel implements ActionListener {
                 try {
                     caminhoPadrao = new File(caminhoPadrao.getName()+"/"+file.getName());
                     CopiaArquivo.copyFile(file, caminhoPadrao);
+                    log.append("Finalizado.\n");
+                    log.append("Reinicie seu Torrent para finalizar.\n");
                 } catch (IOException ex) {
                     Logger.getLogger(FileChooser.class.getName()).log(Level.SEVERE, null, ex);
                 }
@@ -76,27 +78,6 @@ public class FileChooser extends JPanel implements ActionListener {
             System.err.println("Couldn't find file: " + path);
             return null;
         }
-    }
-
-    /**
-     * Create the GUI and show it.  For thread safety,
-     * this method should be invoked from the
-     * event dispatch thread.
-     */
-    public static void createAndShowGUI(File path) {
-        //Create and set up the window.
-        JFrame frame = new JFrame("FileChooser");
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-
-        //Add content to the window.
-        frame.add(new FileChooser(path));
-
-        //Display the window.
-        frame.pack();
-        frame.setLocationRelativeTo(null);
-        frame.setSize(500, 200);
-        frame.setVisible(true);
-        
     }
 
 }

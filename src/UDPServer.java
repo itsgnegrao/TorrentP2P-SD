@@ -49,6 +49,11 @@ public class UDPServer{
                     String file = data.replace("!!!DOWNFILE!!!", "");
                     downFile(file, request);
                 }
+                else if (data.contains("!!!NEWFILE!!!")){
+                    String nick = data.replace("!!!NEWFILE!!!", "");
+                    getFiles(nick, aSocket, request.getAddress(), request.getPort());
+                    
+                }
 
             } //while
         }catch (SocketException e){
@@ -223,5 +228,6 @@ public class UDPServer{
         
         
     }//método
+
     
 }//class
